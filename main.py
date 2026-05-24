@@ -11,7 +11,7 @@ ROLE_ID = int(os.getenv("ROLE_ID"))
 intents = discord.Intents.default()
 client = discord.Client(intents=intents)
 
-WAR_START = datetime(2026, 6, 7, tzinfo=ZoneInfo("Europe/Malta"))
+WAR_START = datetime(2026, 5, 31, tzinfo=ZoneInfo("Europe/Malta"))
 
 sent_cache = set()
 
