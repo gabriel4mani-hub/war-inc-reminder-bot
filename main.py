@@ -17,6 +17,10 @@ sent_cache = set()
 
 def is_war_week(now):
     delta_days = (now.date() - WAR_START.date()).days
+
+    if delta_days < 0:
+        return False
+
     week_number = delta_days // 7
     return week_number % 2 == 0
 
