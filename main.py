@@ -5,9 +5,12 @@ from zoneinfo import ZoneInfo
 import os
 
 TOKEN = os.getenv("DISCORD_TOKEN")
-WAR_CHANNEL_ID = int(os.getenv("WAR_CHANNEL_ID"))
-BATTLEFIELD_CHANNEL_ID = int(os.getenv("BATTLEFIELD_CHANNEL_ID"))
-ROLE_ID = int(os.getenv("ROLE_ID"))
+
+WAR_ROLE_ID = int(os.getenv("WAR_ROLE_ID"))
+BATTLEFIELD_ROLE_ID = int(os.getenv("BATTLEFIELD_ROLE_ID"))
+
+WAR_CHANNEL_ID = 1484346112696516729
+BATTLEFIELD_CHANNEL_ID = 1513181468325576734
 
 intents = discord.Intents.default()
 client = discord.Client(intents=intents)
@@ -52,7 +55,7 @@ async def reminder_loop():
     if now.minute != 0:
         return
 
-    # War Inc reminders
+    # War Inc clan war reminders
     if is_war_week(now):
         event_name = get_event_name(now)
 
@@ -65,7 +68,9 @@ async def reminder_loop():
                 war_channel = client.get_channel(WAR_CHANNEL_ID)
 
                 if war_channel:
-                    await war_channel.send(f"<@&{ROLE_ID}> Time for {event_name}!")
+                    await war_channel.send(
+                        f"<@&{WAR_ROLE_ID}> Time for {event_name}!"
+                    )
 
     # Battlefield Dragon reminders
     if is_battlefield_dragon_time(now):
@@ -78,12 +83,14 @@ async def reminder_loop():
 
             if battlefield_channel:
                 await battlefield_channel.send(
-                    f"<@&{ROLE_ID}> Battlefield Dragon is available!"
+                    f"<@&{BATTLEFIELD_ROLE_ID}> Battlefield Dragon is available!"
                 )
 
 @client.event
 async def on_ready():
     print(f"Logged in as {client.user}")
-    reminder_loop.start()
+
+    if not reminder_loop.is_running():
+        reminder_loop.start()
 
 client.run(TOKEN)
