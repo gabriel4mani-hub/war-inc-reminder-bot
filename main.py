@@ -1,11 +1,12 @@
 import discord
 from discord.ext import tasks
-from datetime import datetime, timedelta
+from datetime import datetime
 from zoneinfo import ZoneInfo
 import os
 
 TOKEN = os.getenv("DISCORD_TOKEN")
-CHANNEL_ID = int(os.getenv("CHANNEL_ID"))
+WAR_CHANNEL_ID = int(os.getenv("WAR_CHANNEL_ID"))
+BATTLEFIELD_CHANNEL_ID = int(os.getenv("BATTLEFIELD_CHANNEL_ID"))
 ROLE_ID = int(os.getenv("ROLE_ID"))
 
 intents = discord.Intents.default()
@@ -41,32 +42,44 @@ def get_event_name(now):
 
     return None
 
+def is_battlefield_dragon_time(now):
+    return now.hour in [3, 9, 15, 21]
+
 @tasks.loop(minutes=1)
 async def reminder_loop():
     now = datetime.now(ZoneInfo("Europe/Malta"))
 
-    if not is_war_week(now):
-        return
-
     if now.minute != 0:
         return
 
-    event_name = get_event_name(now)
+    # War Inc reminders
+    if is_war_week(now):
+        event_name = get_event_name(now)
 
-    if not event_name:
-        return
+        if event_name:
+            unique_key = f"war-{now.strftime('%Y-%m-%d-%H')}"
 
-    unique_key = f"{now.strftime('%Y-%m-%d-%H')}"
+            if unique_key not in sent_cache:
+                sent_cache.add(unique_key)
 
-    if unique_key in sent_cache:
-        return
+                war_channel = client.get_channel(WAR_CHANNEL_ID)
 
-    sent_cache.add(unique_key)
+                if war_channel:
+                    await war_channel.send(f"<@&{ROLE_ID}> Time for {event_name}!")
 
-    channel = client.get_channel(CHANNEL_ID)
+    # Battlefield Dragon reminders
+    if is_battlefield_dragon_time(now):
+        unique_key = f"battlefield-{now.strftime('%Y-%m-%d-%H')}"
 
-    if channel:
-        await channel.send(f"<@&{ROLE_ID}> Time for {event_name}!")
+        if unique_key not in sent_cache:
+            sent_cache.add(unique_key)
+
+            battlefield_channel = client.get_channel(BATTLEFIELD_CHANNEL_ID)
+
+            if battlefield_channel:
+                await battlefield_channel.send(
+                    f"<@&{ROLE_ID}> Battlefield Dragon is available!"
+                )
 
 @client.event
 async def on_ready():
